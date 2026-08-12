@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMANIN
+        - Inisiatif Keselamatan Publik Digital Kota Bandung</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area" onclick="navigateTo('beranda')">
+                <div class="logo-icon">
+                    <i data-lucide="shield-check"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">AMANIN</span>
+                </div>
+            </div>
+
+            <nav class="nav-links">
+                <a href="#" id="nav-beranda" class="nav-link active" onclick="navigateTo('beranda')">Beranda</a>
+                <a href="#" id="nav-peta" class="nav-link" onclick="navigateTo('peta')">Peta Risiko</a>
+                <a href="#" id="nav-laporan" class="nav-link" onclick="navigateTo('laporan')">Laporan</a>
+                <a href="#" id="nav-statistik" class="nav-link" onclick="navigateTo('statistik')">Statistik</a>
+                <a href="#" id="nav-tentang" class="nav-link" onclick="navigateTo('tentang')">Tentang</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn btn-primary btn-report" onclick="navigateTo('wizard')">
+                    <i data-lucide="plus-circle" class="icon-sm"></i>
+                    <span>Buat Laporan</span>
+                </button>
+                <div class="user-profile" onclick="toggleProfileDropdown()">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100"
+                        alt="User Profile" class="profile-img">
+                    <span class="status-indicator online"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN VIEWS CONTAINER -->
+    <main class="main-content">
+
+        <!-- 1. BERANDA (HOME) VIEW -->
+        <section id="view-beranda" class="view-section active">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <div class="hero-badge">
+                    <span class="pulse-dot"></span>
+                    <span>SISTEM PELAPORAN AKTIF</span>
+                </div>
+                <h1 class="hero-title">Wujudkan Bandung yang Lebih <br><span class="gradient-text">Aman Bersama</span>
+                </h1>
+                <p class="hero-subtitle">Platform pelaporan berbasis komunitas untuk memantau, melaporkan, dan mencegah
+                    potensi gangguan keamanan. Kontribusi Anda adalah langkah awal lingkungan yang lebih kondusif.</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-lg" onclick="navigateTo('peta')">
+                        <i data-lucide="map" class="icon-md"></i>
+                        <span>Lihat Peta Risiko</span>
+                    </button>
+                    <button class="btn btn-secondary btn-lg" onclick="navigateTo('wizard')">
+                        <i data-lucide="file-plus" class="icon-md"></i>
+                        <span>Buat Laporan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper blue">
+                        <i data-lucide="verified"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">LAPORAN TERVERIFIKASI</span>
+                        <div class="stat-value-group">
+                            <span class="stat-value" id="stat-verified-count" data-target="2450">0</span>
+                            <span class="stat-badge trend-up">+15%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper orange">
+                        <i data-lucide="eye"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">TITIK PANTAU AKTIF</span>
+                        <div class="stat-value-group">
+                            <span class="stat-value" id="stat-monitoring-count" data-target="156">0</span>
+                            <span class="stat-badge info-badge">Hari Ini</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper green">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">KONTRIBUSI WARGA</span>
+                        <div class="stat-value-group">
+                            <span class="stat-value" id="stat-citizens-count" data-target="8921">0</span>
+                            <span class="stat-badge user-badge">User</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Laporan Terkini Section -->
+            <div class="section-container">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2 class="section-heading">Laporan Terkini</h2>
+                        <p class="section-subheading">Pantau keamanan dari kontribusi warga secara real-time. Identitas
+                            pelapor dirahasiakan untuk keamanan.</p>
+                    </div>
+                    <a href="#" class="btn-link" onclick="navigateTo('laporan')">
+                        <span>Lihat Semua Laporan</span>
+                        <i data-lucide="arrow-right" class="icon-sm"></i>
+                    </a>
+                </div>
+
+                <div class="recent-reports-grid" id="home-recent-reports">
+                    <!-- Loaded dynamically via app.js -->
+                </div>
+            </div>
+
+            <!-- Fitur Utama Section -->
+            <div class="section-container border-top">
+                <h2 class="section-center-heading">Fitur Utama AMANIN</h2>
+                <p class="section-center-subheading">Pendekatan komprehensif untuk menciptakan lingkungan yang lebih
+                    aman melalui teknologi dan partisipasi aktif warga.</p>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon blue">
+                            <i data-lucide="map-pin"></i>
+                        </div>
+                        <h3>Peta Titik Rawan</h3>
+                        <p>Visualisasi area dengan tingkat kerawanan tinggi berdasarkan data historis dan laporan warga
+                            secara real-time.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon orange">
+                            <i data-lucide="message-square"></i>
+                        </div>
+                        <h3>Laporan Komunitas</h3>
+                        <p>Sistem pelaporan anonim yang aman dan mudah digunakan, langsung terhubung dengan pihak
+                            berwenang terkait.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon green">
+                            <i data-lucide="graduation-cap"></i>
+                        </div>
+                        <h3>Edukasi Keamanan</h3>
+                        <p>Akses ke panduan keselamatan, tips pencegahan kejahatan, dan prosedur darurat untuk
+                            meningkatkan kesadaran warga.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PETA RISIKO VIEW -->
+        <section id="view-peta" class="view-section">
+            <div class="map-view-container">
+                <!-- Leaflet Map Container -->
+                <div id="risk-map" class="map-canvas"></div>
+
+                <!-- Floating Left Panel -->
+                <div class="map-filter-panel">
+                    <div class="panel-header">
+                        <h3>Peta Risiko</h3>
+                        <button class="btn-icon-subtle"><i data-lucide="sliders-horizontal"
+                                class="icon-sm"></i></button>
+                    </div>
+
+                    <div class="panel-body">
+                        <!-- Search Kecamatan -->
+                        <div class="search-input-wrapper">
+                            <i data-lucide="search" class="search-icon"></i>
+                            <input type="text" id="map-search" placeholder="Cari kecamatan..."
+                                oninput="filterMapMarkers()">
+                        </div>
+
+                        <!-- Tingkat Risiko Filter -->
+                        <div class="filter-group">
+                            <label class="filter-group-label">TINGKAT RISIKO</label>
+                            <div class="risk-level-buttons">
+                                <button class="btn-risk-toggle active high" data-risk="Tinggi"
+                                    onclick="toggleMapRiskFilter('Tinggi')">
+                                    <span class="indicator-dot red"></span>
+                                    <span>Tinggi</span>
+                                </button>
+                                <button class="btn-risk-toggle active medium" data-risk="Sedang"
+                                    onclick="toggleMapRiskFilter('Sedang')">
+                                    <span class="indicator-dot orange"></span>
+                                    <span>Sedang</span>
+                                </button>
+                                <button class="btn-risk-toggle active low" data-risk="Rendah"
+                                    onclick="toggleMapRiskFilter('Rendah')">
+                                    <span class="indicator-dot green"></span>
+                                    <span>Rendah</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Jenis Insiden -->
+                        <div class="filter-group">
+                            <label class="filter-group-label">JENIS INSIDEN</label>
+                            <div class="checkbox-list">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="chk-begal" checked onchange="filterMapMarkers()">
+                                    <span class="custom-chk"></span>
+                                    <span class="chk-label">Begal / Perampokan</span>
+                                    <span class="chk-count bg-red-subtle text-red" id="cnt-begal">42</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="chk-curanmor" checked onchange="filterMapMarkers()">
+                                    <span class="custom-chk"></span>
+                                    <span class="chk-label">Pencurian Kendaraan</span>
+                                    <span class="chk-count bg-orange-subtle text-orange" id="cnt-curanmor">87</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="chk-kekerasan" checked onchange="filterMapMarkers()">
+                                    <span class="custom-chk"></span>
+                                    <span class="chk-label">Kekerasan Jalanan</span>
+                                    <span class="chk-count bg-blue-subtle text-blue" id="cnt-kekerasan">15</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="chk-lainnya" checked onchange="filterMapMarkers()">
+                                    <span class="custom-chk"></span>
+                                    <span class="chk-label">Lainnya</span>
+                                    <span class="chk-count bg-gray-subtle text-gray" id="cnt-lainnya">23</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Waktu Dropdown -->
+                        <div class="filter-group">
+                            <label class="filter-group-label">WAKTU</label>
+                            <div class="custom-select-wrapper">
+                                <select id="map-time-select" class="custom-select" onchange="filterMapMarkers()">
+                                    <option value="24h">24 Jam Terakhir</option>
+                                    <option value="7d">7 Hari Terakhir</option>
+                                    <option value="30d">30 Hari Terakhir</option>
+                                    <option value="all">Semua Waktu</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="select-chevron"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Right Legend -->
+                <div class="map-legend-panel">
+                    <span class="legend-title">LEGENDA PANAS</span>
+                    <div class="legend-scale">
+                        <span class="legend-text">Rendah</span>
+                        <div class="legend-gradient"></div>
+                        <span class="legend-text">Tinggi</span>
+                    </div>
+                </div>
+
+                <!-- Floating Map Tools -->
+                <div class="map-tools-floating">
+                    <button class="btn-floating-tool active" title="Tampilan Peta" id="btn-map-view"
+                        onclick="setMapTileStyle('default')"><i data-lucide="map"></i></button>
+                    <button class="btn-floating-tool" title="Tampilan Satelit" id="btn-satellite-view"
+                        onclick="setMapTileStyle('satellite')"><i data-lucide="layers"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. LAPORAN VIEW -->
+        <section id="view-laporan" class="view-section">
+            <div class="section-container page-padding">
+                <div class="reports-header-row">
+                    <div class="reports-title-group">
+                        <h1 class="page-title">Daftar Laporan Komunitas</h1>
+                        <p class="page-subtitle">Pantau dan tinjau laporan insiden yang dikirimkan oleh warga. Informasi
+                            disajikan secara anonim untuk menjaga privasi.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('wizard')">
+                        <i data-lucide="shield-alert" class="icon-sm"></i>
+                        <span>Laporkan Insiden</span>
+                    </button>
+                </div>
+
+                <!-- Filters Dashboard -->
+                <div class="reports-filters-bar">
+                    <!-- Search Input -->
+                    <div class="filter-search-box">
+                        <i data-lucide="search" class="filter-search-icon"></i>
+                        <input type="text" id="report-search-input" placeholder="Cari lokasi atau jenis insiden..."
+                            oninput="applyReportFilters()">
+                    </div>
+
+                    <!-- Category Selector -->
+                    <div class="filter-dropdown-wrapper">
+                        <select id="filter-category" class="custom-select filter-select"
+                            onchange="applyReportFilters()">
+                            <option value="all">Kategori</option>
+                            <option value="Begal / Perampokan">Begal / Perampokan</option>
+                            <option value="Pencurian Kendaraan">Pencurian Kendaraan</option>
+                            <option value="Kekerasan Jalanan">Kekerasan Jalanan</option>
+                            <option value="Pohon Tumbang">Pohon Tumbang</option>
+                            <option value="Banjir Genangan">Banjir Genangan</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                        <i data-lucide="shield" class="select-icon-left"></i>
+                        <i data-lucide="chevron-down" class="select-chevron-right"></i>
+                    </div>
+
+                    <!-- Status Selector -->
+                    <div class="filter-dropdown-wrapper">
+                        <select id="filter-status" class="custom-select filter-select" onchange="applyReportFilters()">
+                            <option value="all">Status</option>
+                            <option value="VERIFIKASI">Terverifikasi</option>
+                            <option value="SEDANG DITINJAU">Sedang Ditinjau</option>
+                            <option value="BARU">Baru</option>
+                        </select>
+                        <i data-lucide="activity" class="select-icon-left"></i>
+                        <i data-lucide="chevron-down" class="select-chevron-right"></i>
+                    </div>
+                </div>
+
+                <!-- Active Tags -->
+                <div class="active-tags-container" id="active-tags-box">
+                    <span class="active-tags-label">FILTER AKTIF:</span>
+                    <div class="active-tags-list" id="active-tags-list">
+                        <!-- tags injected via app.js -->
+                    </div>
+                    <button class="btn-clear-all" onclick="clearAllReportFilters()">Hapus Semua</button>
+                </div>
+
+                <!-- Report Grid -->
+                <div class="reports-grid" id="reports-cards-grid">
+                    <!-- Generated dynamically in app.js -->
+                </div>
+
+                <!-- Load More Footer -->
+                <div class="reports-footer-pagination">
+                    <span class="pagination-info" id="pagination-counter">Menampilkan 3 dari 124 laporan</span>
+                    <button class="btn btn-secondary load-more-btn" id="btn-load-more" onclick="loadMoreReports()">
+                        <i data-lucide="refresh-cw" class="icon-sm anim-spin-hover"></i>
+                        <span>Muat Lebih Banyak</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. STATISTIK VIEW -->
+        <section id="view-statistik" class="view-section">
+            <div class="section-container page-padding">
+                <h1 class="page-title">Statistik Keamanan Bandung</h1>
+                <p class="page-subtitle">Analisis data tren kerawanan dan tingkat keamanan publik kota Bandung secara
+                    berkala.</p>
+
+                <div class="stats-showcase-grid">
+                    <!-- Chart mock 1 -->
+                    <div class="chart-card">
+                        <h3>Tren Insiden Bulanan (2026)</h3>
+                        <div class="chart-placeholder">
+                            <div class="mock-chart-bars">
+                                <div class="bar-col" style="--val: 45%"><span class="bar-lbl">Jan</span></div>
+                                <div class="bar-col" style="--val: 60%"><span class="bar-lbl">Feb</span></div>
+                                <div class="bar-col" style="--val: 85%"><span class="bar-lbl">Mar</span></div>
+                                <div class="bar-col" style="--val: 70%"><span class="bar-lbl">Apr</span></div>
+                                <div class="bar-col" style="--val: 50%"><span class="bar-lbl">Mei</span></div>
+                                <div class="bar-col" style="--val: 40%"><span class="bar-lbl">Jun</span></div>
+                                <div class="bar-col" style="--val: 65%"><span class="bar-lbl">Jul</span></div>
+                                <div class="bar-col" style="--val: 90%"><span class="bar-lbl">Agt</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Chart mock 2 -->
+                    <div class="chart-card">
+                        <h3>Kategori Laporan Terbanyak</h3>
+                        <div class="chart-placeholder">
+                            <div class="mock-pie-list">
+                                <div class="pie-item">
+                                    <span class="pie-color bg-red"></span>
+                                    <span class="pie-lbl">Pencurian Kendaraan (38%)</span>
+                                </div>
+                                <div class="pie-item">
+                                    <span class="pie-color bg-orange"></span>
+                                    <span class="pie-lbl">Begal / Perampokan (28%)</span>
+                                </div>
+                                <div class="pie-item">
+                                    <span class="pie-color bg-blue"></span>
+                                    <span class="pie-lbl">Lampu Jalan Padam (18%)</span>
+                                </div>
+                                <div class="pie-item">
+                                    <span class="pie-color bg-green"></span>
+                                    <span class="pie-lbl">Banjir & Pohon Tumbang (16%)</span>
+                                </div>
+                            </div>
+                            <div class="pie-circle-mock">
+                                <div class="pie-inner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. TENTANG VIEW -->
+        <section id="view-tentang" class="view-section">
+            <div class="section-container page-padding max-w-lg">
+                <div class="about-container">
+                    <div class="about-header text-center">
+                        <div class="about-logo-wrapper">
+                            <i data-lucide="shield-check" class="icon-xl text-blue-primary"></i>
+                        </div>
+                        <h1 class="page-title text-center mt-sm">Tentang AMANIN</h1>
+                        <p class="page-subtitle text-center">Inisiatif digital untuk kolaborasi publik demi Bandung yang
+                            lebih aman dan nyaman.</p>
+                    </div>
+
+                    <div class="about-body-text mt-md">
+                        <p><strong>AMANIN</strong> adalah sebuah platform pelaporan berbasis komunitas yang dikembangkan
+                            secara kolaboratif untuk membantu warga kota Bandung memantau, melaporkan, dan
+                            mengantisipasi potensi gangguan keamanan dan ketertiban di lingkungan sekitar.</p>
+
+                        <p>Dengan integrasi peta interaktif dan sistem pelaporan anonim, AMANIN
+                            berupaya memberdayakan warga sebagai sensor sosial yang aktif, sekaligus menjadi jembatan
+                            informasi yang cepat bagi pihak berwenang maupun sesama komunitas warga.</p>
+
+                        <h3 class="mt-md">Mengapa Platform Ini Penting?</h3>
+                        <ul>
+                            <li><strong>Respons Cepat:</strong> Menghubungkan informasi kejadian di lapangan secara
+                                visual menggunakan peta interaktif.</li>
+                            <li><strong>Transparansi Data:</strong> Memetakan area-area rawan berdasarkan laporan riil
+                                untuk meningkatkan kesiapsiagaan warga.</li>
+                            <li><strong>Privasi Aman:</strong> Seluruh laporan warga diproses secara anonim untuk
+                                menjamin keselamatan dan kenyamanan pelapor.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. WIZARD (LAPOR INSIDEN BARU) VIEW -->
+        <section id="view-wizard" class="view-section">
+            <div class="section-container page-padding">
+
+                <!-- Wizard Header -->
+                <div class="wizard-header-row">
+                    <div class="wizard-title-group">
+                        <h1 class="page-title">Lapor Insiden Baru</h1>
+                        <p class="page-subtitle">Laporan Anda membantu memetakan risiko keamanan di Bandung. Pastikan
+                            informasi akurat dan jelas.</p>
+                    </div>
+
+                    <!-- Emergency Callout Box -->
+                    <div class="emergency-callout">
+                        <div class="callout-icon">
+                            <i data-lucide="alert-triangle"></i>
+                        </div>
+                        <div class="callout-text">
+                            <strong>Bukan Panggilan Darurat</strong>
+                            <span>Hubungi 112 untuk kondisi darurat.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Progress Stepper -->
+                <div class="stepper-container">
+                    <div class="stepper-line-bg">
+                        <div class="stepper-line-active" id="wizard-progress-bar" style="width: 0%;"></div>
+                    </div>
+
+                    <div class="step-item active" id="step-node-1" onclick="jumpToWizardStep(1)">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Lokasi</span>
+                    </div>
+                    <div class="step-item" id="step-node-2" onclick="jumpToWizardStep(2)">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Detail</span>
+                    </div>
+                    <div class="step-item" id="step-node-3" onclick="jumpToWizardStep(3)">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Bukti</span>
+                    </div>
+                    <div class="step-item" id="step-node-4" onclick="jumpToWizardStep(4)">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Review</span>
+                    </div>
+                </div>
+
+                <!-- Wizard Card Main Box -->
+                <div class="wizard-card-wrapper">
+                    <!-- STEP 1: LOKASI -->
+                    <div class="wizard-step-pane active" id="wizard-pane-1">
+                        <h2 class="pane-title">Tentukan Lokasi Insiden</h2>
+
+                        <div class="wizard-map-container">
+                            <div id="wizard-select-map" class="map-canvas select-map-canvas"></div>
+
+                            <!-- Search overlay over map -->
+                            <div class="map-search-overlay">
+                                <i data-lucide="search" class="overlay-search-icon"></i>
+                                <input type="text" id="wizard-map-search-input"
+                                    placeholder="Tulis alamat atau klik peta, contoh: Braga..."
+                                    onkeydown="handleWizardMapSearch(event)">
+                                <button class="btn-overlay-search" onclick="triggerWizardMapSearch()"><i
+                                        data-lucide="arrow-right"></i></button>
+                            </div>
+
+                            <!-- Locate Me Floating Button -->
+                            <button class="btn-locate-me" onclick="locateUserInWizard()" title="Gunakan Lokasi Saya">
+                                <i data-lucide="navigation"></i>
+                            </button>
+                        </div>
+
+                        <div class="selected-address-bar mt-sm" id="selected-coords-display">
+                            <i data-lucide="map-pin" class="text-blue-primary"></i>
+                            <span id="wizard-selected-address">Silakan klik pada peta atau gunakan kolom pencarian di
+                                atas untuk menentukan titik lokasi.</span>
+                        </div>
+
+                        <div class="wizard-footer-nav mt-md">
+                            <div></div> <!-- spacer -->
+                            <button class="btn btn-primary" onclick="nextWizardStep()">
+                                <span>Lanjut</span>
+                                <i data-lucide="arrow-right" class="icon-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: DETAIL -->
+                    <div class="wizard-step-pane" id="wizard-pane-2">
+                        <h2 class="pane-title">Masukkan Detail Insiden</h2>
+
+                        <form id="wizard-details-form" class="wizard-form" onsubmit="event.preventDefault();">
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label for="wiz-category">Kategori Insiden <span class="required">*</span></label>
+                                    <div class="custom-select-wrapper">
+                                        <select id="wiz-category" class="custom-select" required>
+                                            <option value="" disabled selected>Pilih Kategori</option>
+                                            <option value="Begal / Perampokan">Begal / Perampokan</option>
+                                            <option value="Pencurian Kendaraan">Pencurian Kendaraan</option>
+                                            <option value="Kekerasan Jalanan">Kekerasan Jalanan</option>
+                                            <option value="Pohon Tumbang">Pohon Tumbang</option>
+                                            <option value="Banjir Genangan">Banjir Genangan</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                        <i data-lucide="chevron-down" class="select-chevron"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label>Tingkat Risiko <span class="required">*</span></label>
+                                    <div class="risk-selector-segmented">
+                                        <input type="radio" name="wiz-risk" id="risk-low" value="Rendah">
+                                        <label for="risk-low" class="risk-option low">Rendah</label>
+
+                                        <input type="radio" name="wiz-risk" id="risk-med" value="Sedang" checked>
+                                        <label for="risk-med" class="risk-option med">Sedang</label>
+
+                                        <input type="radio" name="wiz-risk" id="risk-high" value="Tinggi">
+                                        <label for="risk-high" class="risk-option high">Tinggi</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="wiz-title">Judul Laporan / Nama Jalan <span
+                                        class="required">*</span></label>
+                                <input type="text" id="wiz-title"
+                                    placeholder="Contoh: Lampu Jalan Mati di Jl. Dago, Pohon Tumbang dekat Balai Kota"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="wiz-desc">Deskripsi Kejadian <span class="required">*</span></label>
+                                <textarea id="wiz-desc" rows="5"
+                                    placeholder="Jelaskan secara detail mengenai situasi, kronologi, atau dampak dari insiden tersebut agar mudah ditindaklanjuti..."
+                                    required></textarea>
+                            </div>
+                        </form>
+
+                        <div class="wizard-footer-nav mt-md">
+                            <button class="btn btn-secondary" onclick="prevWizardStep()">
+                                <i data-lucide="arrow-left" class="icon-sm"></i>
+                                <span>Kembali</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="validateStep2AndNext()">
+                                <span>Lanjut</span>
+                                <i data-lucide="arrow-right" class="icon-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: BUKTI -->
+                    <div class="wizard-step-pane" id="wizard-pane-3">
+                        <h2 class="pane-title">Unggah Bukti Pendukung</h2>
+
+                        <div class="upload-zone" id="upload-drag-area" onclick="triggerFileInput()">
+                            <input type="file" id="wiz-file-input" style="display: none;" accept="image/*"
+                                onchange="handleFileSelect(event)">
+                            <div class="upload-icon-wrapper">
+                                <i data-lucide="cloud-upload" class="icon-lg"></i>
+                            </div>
+                            <h3 class="upload-heading">Seret & lepas foto di sini, atau klik untuk memilih</h3>
+                            <p class="upload-hint">Format yang didukung: JPG, PNG. Ukuran maksimal: 5MB.</p>
+                        </div>
+
+                        <!-- Preview upload container -->
+                        <div class="upload-preview-container" id="upload-preview-box" style="display: none;">
+                            <div class="preview-card">
+                                <img id="uploaded-image-preview" src="#" alt="Preview">
+                                <div class="preview-info">
+                                    <span class="preview-filename" id="preview-filename">bukti_kejadian.png</span>
+                                    <span class="preview-filesize" id="preview-filesize">1.2 MB</span>
+                                    <div class="progress-bar-wrapper">
+                                        <div class="progress-fill" id="upload-progress-fill" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                                <button class="btn-remove-preview" onclick="removeUploadedFile(event)"><i
+                                        data-lucide="trash-2"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="wizard-footer-nav mt-md">
+                            <button class="btn btn-secondary" onclick="prevWizardStep()">
+                                <i data-lucide="arrow-left" class="icon-sm"></i>
+                                <span>Kembali</span>
+                            </button>
+                            <button class="btn btn-primary" onclick="nextWizardStep()">
+                                <span>Lanjut</span>
+                                <i data-lucide="arrow-right" class="icon-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: REVIEW -->
+                    <div class="wizard-step-pane" id="wizard-pane-4">
+                        <h2 class="pane-title">Review Laporan Anda</h2>
+                        <p class="pane-subtitle mb-sm">Mohon tinjau kembali data laporan di bawah ini sebelum menekan
+                            tombol Kirim Laporan.</p>
+
+                        <div class="review-details-box">
+                            <div class="review-row">
+                                <span class="review-label">Kategori</span>
+                                <span class="review-val" id="review-category">Begal / Perampokan</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Tingkat Risiko</span>
+                                <span class="review-val" id="review-risk"><span
+                                        class="badge badge-red">Tinggi</span></span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Judul / Lokasi</span>
+                                <span class="review-val font-semibold" id="review-title">Jalan Braga</span>
+                            </div>
+                            <div class="review-row align-start">
+                                <span class="review-label">Koordinat & Alamat</span>
+                                <div class="review-val-col">
+                                    <span class="address-text" id="review-address">Jl. Braga, Kec. Sumur Bandung, Kota
+                                        Bandung</span>
+                                    <span class="coords-text text-sm text-muted" id="review-coords">(-6.9175,
+                                        107.6191)</span>
+                                </div>
+                            </div>
+                            <div class="review-row align-start">
+                                <span class="review-label">Deskripsi Kejadian</span>
+                                <p class="review-val-text" id="review-desc">Ada laporan kejadian...</p>
+                            </div>
+                            <div class="review-row align-start">
+                                <span class="review-label">Lampiran Bukti</span>
+                                <div class="review-bukti-preview" id="review-bukti-box">
+                                    <img id="review-bukti-img"
+                                        src="https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&q=80&w=200"
+                                        alt="Bukti">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="anonymity-assurance-card mt-sm">
+                            <i data-lucide="shield-check" class="text-green-primary"></i>
+                            <div class="assurance-text">
+                                <strong>Laporan Dikirim Secara Anonim</strong>
+                                <span>Informasi pribadi atau profil Anda tidak akan ditampilkan ke publik.</span>
+                            </div>
+                        </div>
+
+                        <div class="wizard-footer-nav mt-md">
+                            <button class="btn btn-secondary" onclick="prevWizardStep()">
+                                <i data-lucide="arrow-left" class="icon-sm"></i>
+                                <span>Kembali</span>
+                            </button>
+                            <button class="btn btn-primary btn-submit-report" onclick="submitNewIncident()">
+                                <i data-lucide="send" class="icon-sm"></i>
+                                <span>Kirim Laporan</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SUCCESS SUBMISSION MODAL -->
+    <div class="modal-backdrop" id="success-modal">
+        <div class="modal-card">
+            <div class="success-icon-container">
+                <i data-lucide="check-circle" class="icon-xl"></i>
+            </div>
+            <h2>Laporan Berhasil Dikirim!</h2>
+            <p>Terima kasih atas kontribusi Anda. Laporan Anda telah tersimpan secara anonim dan sedang ditinjau oleh
+                tim keamanan verifikasi Kota Bandung.</p>
+            <div class="modal-buttons mt-md">
+                <button class="btn btn-primary" onclick="closeSuccessModalAndRedirect()">Tutup & Lihat Laporan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-brand-section">
+                <div class="footer-logo" onclick="navigateTo('beranda')">
+                    <div class="logo-icon-subtle">
+                        <i data-lucide="shield"></i>
+                    </div>
+                    <span>AMANIN</span>
+                </div>
+                <p class="footer-tagline">Inisiatif Keselamatan Publik Digital Kota Bandung.</p>
+            </div>
+
+            <div class="footer-nav-section">
+                <a href="#" class="footer-link" onclick="navigateTo('tentang')">Privasi</a>
+                <a href="#" class="footer-link" onclick="navigateTo('tentang')">Syarat & Ketentuan</a>
+                <a href="#" class="footer-link" onclick="navigateTo('tentang')">Bantuan</a>
+            </div>
+
+            <div class="footer-social-section">
+                <a href="#" class="social-icon" title="Bahasa"><i data-lucide="globe"></i></a>
+                <a href="#" class="social-icon" title="Bagikan"><i data-lucide="share-2"></i></a>
+                <a href="#" class="social-icon" title="Hubungi Kami"><i data-lucide="mail"></i></a>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            <span>&copy; 2026 AMANIN. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <!-- Leaflet.js script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Custom Application Javascript -->
+    <script src="app.js"></script>
+</body>
+
+</html>
