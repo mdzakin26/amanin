@@ -140,6 +140,7 @@ let visibleReportsCount = 3;
 // 2. WINDOW LIFECYCLE & ROUTING
 window.addEventListener('DOMContentLoaded', () => {
     // Initial UI Elements rendering
+    initAuth();
     lucide.createIcons();
     initAppRouting();
     renderRecentReportsHome();
@@ -179,7 +180,14 @@ function navigateTo(targetViewId) {
             resetWizard();
         } else if (targetViewId === 'beranda') {
             animateStatsCounters();
+        } else if (targetViewId === 'admin-dashboard') {
+            renderAdminDashboard();
+        } else if (targetViewId === 'my-reports') {
+            renderMyReports();
         }
+        
+        // Refresh icons for dynamically inserted elements
+        lucide.createIcons();
     }
 }
 
@@ -995,7 +1003,8 @@ function submitNewIncident() {
             description: wizardState.description,
             status: "BARU",
             coords: [wizardState.selectedLatLng.lat, wizardState.selectedLatLng.lng],
-            image: wizardState.attachmentUrl || 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=600'
+            image: wizardState.attachmentUrl || 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=600',
+            userEmail: currentUser ? currentUser.email : 'anon@amanin.id'
         };
 
         // Push to local database array
@@ -1056,6 +1065,564 @@ function resetWizard() {
     updateWizardStepperUI();
 }
 
-function toggleProfileDropdown() {
-    alert("Profil Warga AMANBANDUNG - Status: Aktif & Terverifikasi. Menu Pengaturan Profil segera hadir.");
+// ==========================================
+// AUTHENTICATION & MOCK ACCOUNTS LOGIC
+// ==========================================
+let currentUser = null;
+let registeredUsers = [];
+
+// Initialize Auth State
+function initAuth() {
+    // Default Users list
+    const defaultUsers = [
+        {
+            name: "Dian Pratama",
+            email: "warga@amanin.id",
+            password: "warga123",
+            role: "Warga",
+            nik: "3273012345670001",
+            kecamatan: "Coblong"
+        },
+        {
+            name: "Budi Santoso",
+            email: "admin@amanin.id",
+            password: "admin123",
+            role: "Admin",
+            nik: "3273012345670002",
+            kecamatan: "Sumur Bandung"
+        }
+    ];
+
+    // Load registered users from localStorage
+    const savedUsers = localStorage.getItem('amanin_users');
+    if (savedUsers) {
+        registeredUsers = JSON.parse(savedUsers);
+    } else {
+        registeredUsers = defaultUsers;
+        localStorage.setItem('amanin_users', JSON.stringify(registeredUsers));
+    }
+
+    // Load current logged in user
+    const savedUser = localStorage.getItem('amanin_current_user');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+    }
+
+    updateAuthUI();
+
+    // Close profile dropdown when clicking anywhere else
+    document.addEventListener('click', (e) => {
+        const profileContainer = document.getElementById('header-user-profile');
+        const dropdown = document.getElementById('profile-dropdown');
+        if (profileContainer && dropdown && dropdown.classList.contains('active')) {
+            if (!profileContainer.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        }
+    });
+}
+
+function updateAuthUI() {
+    const authButtons = document.getElementById('header-auth-buttons');
+    const profileContainer = document.getElementById('header-user-profile');
+    const navAdminDashboard = document.getElementById('nav-admin-dashboard');
+    const menuAdminDashboardDropdown = document.getElementById('menu-admin-dashboard-dropdown-dropdown');
+    const menuAdminDashboardDropdownActual = document.getElementById('menu-admin-dashboard-dropdown');
+    const menuMyReports = document.getElementById('menu-my-reports');
+
+    if (currentUser) {
+        // User logged in
+        if (authButtons) authButtons.style.display = 'none';
+        if (profileContainer) profileContainer.style.display = 'block';
+
+        // Set user avatar & name
+        document.getElementById('dropdown-user-name').innerText = currentUser.name;
+        document.getElementById('dropdown-user-role').innerText = currentUser.role === 'Admin' ? 'Admin AMANIN' : 'Warga Bandung';
+        
+        // Profile icon/indicator style
+        const statusIndicator = profileContainer.querySelector('.status-indicator');
+        if (statusIndicator) {
+            statusIndicator.className = 'status-indicator online';
+        }
+
+        if (currentUser.role === 'Admin') {
+            if (navAdminDashboard) navAdminDashboard.style.display = 'block';
+            if (menuAdminDashboardDropdown) menuAdminDashboardDropdown.style.display = 'flex';
+            if (menuAdminDashboardDropdownActual) menuAdminDashboardDropdownActual.style.display = 'flex';
+            if (menuMyReports) menuMyReports.style.display = 'none';
+        } else {
+            if (navAdminDashboard) navAdminDashboard.style.display = 'none';
+            if (menuAdminDashboardDropdown) menuAdminDashboardDropdown.style.display = 'none';
+            if (menuAdminDashboardDropdownActual) menuAdminDashboardDropdownActual.style.display = 'none';
+            if (menuMyReports) menuMyReports.style.display = 'flex';
+        }
+    } else {
+        // User logged out
+        if (authButtons) authButtons.style.display = 'flex';
+        if (profileContainer) profileContainer.style.display = 'none';
+        if (navAdminDashboard) navAdminDashboard.style.display = 'none';
+        if (menuAdminDashboardDropdown) menuAdminDashboardDropdown.style.display = 'none';
+        if (menuAdminDashboardDropdownActual) menuAdminDashboardDropdownActual.style.display = 'none';
+        if (menuMyReports) menuMyReports.style.display = 'none';
+    }
+}
+
+// Toggle profile dropdown menu
+function toggleProfileDropdown(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+    }
+}
+
+// Route Guard for creating reports
+function triggerCreateReport() {
+    if (!currentUser) {
+        showToast("Akses Ditolak", "Anda harus masuk terlebih dahulu untuk membuat laporan.", "error");
+        navigateTo('login');
+    } else {
+        navigateTo('wizard');
+    }
+}
+
+// Handle Login
+function handleMockLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const selectedRoleInput = document.querySelector('input[name="login-role"]:checked');
+    const selectedRole = selectedRoleInput ? selectedRoleInput.value : 'Warga';
+
+    const loginBtn = document.getElementById('btn-login-submit');
+    const originalContent = loginBtn.innerHTML;
+    loginBtn.innerHTML = `<i data-lucide="loader" class="icon-sm anim-spin"></i> <span>Memproses...</span>`;
+    lucide.createIcons();
+    loginBtn.disabled = true;
+
+    setTimeout(() => {
+        const user = registeredUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+        if (!user || user.password !== password) {
+            showToast("Login Gagal", "Email atau kata sandi yang Anda masukkan salah.", "error");
+            loginBtn.innerHTML = originalContent;
+            loginBtn.disabled = false;
+            lucide.createIcons();
+            return;
+        }
+
+        if (user.role !== selectedRole) {
+            showToast("Login Gagal", `Akun Anda terdaftar sebagai ${user.role}, bukan ${selectedRole}.`, "error");
+            loginBtn.innerHTML = originalContent;
+            loginBtn.disabled = false;
+            lucide.createIcons();
+            return;
+        }
+
+        // Login Success
+        currentUser = user;
+        localStorage.setItem('amanin_current_user', JSON.stringify(currentUser));
+        updateAuthUI();
+
+        showToast("Login Berhasil", `Selamat datang kembali, ${user.name}!`, "success");
+        
+        // Reset form
+        document.getElementById('login-form').reset();
+        loginBtn.innerHTML = originalContent;
+        loginBtn.disabled = false;
+        lucide.createIcons();
+
+        // Redirect
+        if (currentUser.role === 'Admin') {
+            navigateTo('admin-dashboard');
+        } else {
+            navigateTo('beranda');
+        }
+    }, 1200);
+}
+
+// Handle Register
+function handleMockRegister(e) {
+    e.preventDefault();
+    const name = document.getElementById('reg-name').value.trim();
+    const nik = document.getElementById('reg-nik').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const kecamatan = document.getElementById('reg-kecamatan').value;
+    const password = document.getElementById('reg-password').value;
+    const confirmPassword = document.getElementById('reg-confirm').value;
+
+    const registerBtn = document.getElementById('btn-register-submit');
+    const originalContent = registerBtn.innerHTML;
+    registerBtn.innerHTML = `<i data-lucide="loader" class="icon-sm anim-spin"></i> <span>Mendaftarkan...</span>`;
+    lucide.createIcons();
+    registerBtn.disabled = true;
+
+    setTimeout(() => {
+        if (password !== confirmPassword) {
+            showToast("Pendaftaran Gagal", "Konfirmasi kata sandi tidak cocok.", "error");
+            registerBtn.innerHTML = originalContent;
+            registerBtn.disabled = false;
+            lucide.createIcons();
+            return;
+        }
+
+        const emailExists = registeredUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
+        if (emailExists) {
+            showToast("Pendaftaran Gagal", "Email ini sudah terdaftar.", "error");
+            registerBtn.innerHTML = originalContent;
+            registerBtn.disabled = false;
+            lucide.createIcons();
+            return;
+        }
+
+        const nikExists = registeredUsers.some(u => u.nik === nik);
+        if (nikExists) {
+            showToast("Pendaftaran Gagal", "NIK ini sudah terdaftar.", "error");
+            registerBtn.innerHTML = originalContent;
+            registerBtn.disabled = false;
+            lucide.createIcons();
+            return;
+        }
+
+        // Create new citizen user
+        const newUser = {
+            name,
+            nik,
+            email,
+            kecamatan,
+            password,
+            role: "Warga"
+        };
+
+        registeredUsers.push(newUser);
+        localStorage.setItem('amanin_users', JSON.stringify(registeredUsers));
+
+        showToast("Pendaftaran Berhasil", "Akun berhasil dibuat. Silakan masuk.", "success");
+        
+        // Reset form
+        document.getElementById('register-form').reset();
+        registerBtn.innerHTML = originalContent;
+        registerBtn.disabled = false;
+        lucide.createIcons();
+
+        // Redirect to Login
+        navigateTo('login');
+        document.getElementById('login-email').value = email;
+    }, 1500);
+}
+
+// Handle Logout
+function handleLogout(e) {
+    if (e) e.preventDefault();
+    currentUser = null;
+    localStorage.removeItem('amanin_current_user');
+    updateAuthUI();
+
+    // Close dropdown
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown) dropdown.classList.remove('active');
+
+    showToast("Keluar Berhasil", "Anda telah keluar dari akun.", "success");
+    navigateTo('beranda');
+}
+
+// ==========================================
+// TOAST SYSTEM
+// ==========================================
+function showToast(title, desc, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
+    
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i data-lucide="${iconName}"></i>
+        </div>
+        <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            <div class="toast-desc">${desc}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <i data-lucide="x"></i>
+        </button>
+    `;
+
+    container.appendChild(toast);
+    lucide.createIcons();
+
+    // Trigger sliding animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 4000);
+}
+
+// ==========================================
+// ADMIN DASHBOARD CONTROLLER
+// ==========================================
+let activeAdminReportId = null;
+
+function renderAdminDashboard() {
+    if (!currentUser || currentUser.role !== 'Admin') {
+        navigateTo('beranda');
+        return;
+    }
+
+    // Refresh metric numbers
+    const total = incidentsDatabase.length;
+    const pending = incidentsDatabase.filter(inc => inc.status === 'BARU' || inc.status === 'SEDANG DITINJAU').length;
+    const verified = incidentsDatabase.filter(inc => inc.status === 'VERIFIKASI').length;
+    const rejected = incidentsDatabase.filter(inc => inc.status === 'DITOLAK').length;
+
+    document.getElementById('admin-total-reports').innerText = total;
+    document.getElementById('admin-pending-reports').innerText = pending;
+    document.getElementById('admin-verified-reports').innerText = verified;
+    document.getElementById('admin-rejected-reports').innerText = rejected;
+    document.getElementById('admin-queue-count').innerText = `${pending} Laporan`;
+
+    // Render queue list
+    const queueList = document.getElementById('admin-queue-list');
+    queueList.innerHTML = '';
+
+    const pendingReports = incidentsDatabase.filter(inc => inc.status === 'BARU' || inc.status === 'SEDANG DITINJAU');
+
+    if (pendingReports.length === 0) {
+        queueList.innerHTML = `
+            <div class="detail-empty-state" style="padding: 40px 10px;">
+                <i data-lucide="check-square" class="icon-md"></i>
+                <p style="font-size:0.8rem; margin:0;">Semua laporan telah ditinjau! Tidak ada laporan baru dalam antrean.</p>
+            </div>
+        `;
+        lucide.createIcons();
+    } else {
+        pendingReports.forEach(report => {
+            const isActive = report.id === activeAdminReportId;
+            const item = document.createElement('div');
+            item.className = `admin-report-item ${isActive ? 'active' : ''}`;
+            item.onclick = () => selectAdminReport(report.id);
+
+            // Risk Badge color mapping
+            let riskColor = 'badge-orange';
+            if (report.risk === 'Tinggi') riskColor = 'badge-red';
+            else if (report.risk === 'Rendah') riskColor = 'badge-green';
+
+            item.innerHTML = `
+                <div class="item-header">
+                    <span class="item-cat">${report.category}</span>
+                    <span class="item-time">${report.time}</span>
+                </div>
+                <div class="item-title">${report.title}</div>
+                <div class="item-footer">
+                    <span class="item-loc">
+                        <i data-lucide="map-pin"></i>
+                        <span>${report.location}</span>
+                    </span>
+                    <span class="badge ${riskColor}">${report.risk}</span>
+                </div>
+            `;
+            queueList.appendChild(item);
+        });
+        lucide.createIcons();
+    }
+
+    // Render active detail panel
+    renderAdminReportDetail();
+}
+
+function selectAdminReport(reportId) {
+    activeAdminReportId = reportId;
+    renderAdminDashboard();
+}
+
+function renderAdminReportDetail() {
+    const detailPanel = document.getElementById('admin-detail-panel');
+    if (!activeAdminReportId) {
+        detailPanel.innerHTML = `
+            <div class="detail-empty-state">
+                <i data-lucide="file-text" class="icon-xl"></i>
+                <h4>Pilih Laporan</h4>
+                <p>Klik salah satu laporan di daftar sebelah kiri untuk melihat detail bukti dan melakukan tindakan verifikasi.</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    const report = incidentsDatabase.find(inc => inc.id === activeAdminReportId);
+    if (!report) {
+        activeAdminReportId = null;
+        renderAdminReportDetail();
+        return;
+    }
+
+    // Set Risk theme class
+    let riskColor = 'badge-orange';
+    if (report.risk === 'Tinggi') riskColor = 'badge-red';
+    else if (report.risk === 'Rendah') riskColor = 'badge-green';
+
+    detailPanel.innerHTML = `
+        <div class="detail-header-group">
+            <div class="detail-cat-row">
+                <span class="badge badge-gray">${report.category}</span>
+                <span class="badge ${riskColor}">${report.risk} Risk</span>
+            </div>
+            <h2 class="detail-title">${report.title}</h2>
+        </div>
+
+        <div class="detail-info-grid">
+            <div class="info-box">
+                <span class="info-box-label">LOKASI KECAMATAN</span>
+                <span class="info-box-val">${report.kecamatan}</span>
+            </div>
+            <div class="info-box">
+                <span class="info-box-label">WAKTU DIBUAT</span>
+                <span class="info-box-val">${report.time}</span>
+            </div>
+            <div class="info-box" style="grid-column: span 2;">
+                <span class="info-box-label">ALAMAT DETAIL / TITIK KOORDINAT</span>
+                <span class="info-box-val" style="font-size:0.8rem; font-weight:normal;">
+                    ${report.location} <br>
+                    <span class="text-muted" style="font-size:0.75rem;">Coords: (${report.coords ? report.coords.join(', ') : 'N/A'})</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="detail-desc-box">
+            <h4>DESKRIPSI KEJADIAN</h4>
+            <p>${report.description}</p>
+        </div>
+
+        ${report.image ? `
+        <div class="detail-photo-box">
+            <h4>FOTO BUKTI PENDUKUNG</h4>
+            <img src="${report.image}" alt="Bukti" class="detail-img">
+        </div>
+        ` : ''}
+
+        <div class="detail-actions-row">
+            <button class="btn btn-verify" onclick="adminVerifyReport(${report.id})">
+                <i data-lucide="check-circle"></i>
+                <span>Verifikasi Laporan</span>
+            </button>
+            <button class="btn btn-reject" onclick="adminRejectReport(${report.id})">
+                <i data-lucide="x-circle"></i>
+                <span>Tolak</span>
+            </button>
+        </div>
+    `;
+    lucide.createIcons();
+}
+
+function adminVerifyReport(reportId) {
+    const idx = incidentsDatabase.findIndex(inc => inc.id === reportId);
+    if (idx !== -1) {
+        incidentsDatabase[idx].status = 'VERIFIKASI';
+        incidentsDatabase[idx].time = 'Terverifikasi baru saja';
+        activeAdminReportId = null;
+        showToast("Laporan Diverifikasi", "Laporan berhasil divalidasi dan dipublikasikan ke Peta Risiko.", "success");
+        
+        // Refresh views
+        renderAdminDashboard();
+        renderRecentReportsHome();
+        applyReportFilters();
+        if (riskMap) updateMapMarkers();
+    }
+}
+
+function adminRejectReport(reportId) {
+    const idx = incidentsDatabase.findIndex(inc => inc.id === reportId);
+    if (idx !== -1) {
+        incidentsDatabase[idx].status = 'DITOLAK';
+        activeAdminReportId = null;
+        showToast("Laporan Ditolak", "Laporan telah ditolak dan tidak akan dipetakan.", "error");
+
+        // Refresh views
+        renderAdminDashboard();
+        renderRecentReportsHome();
+        applyReportFilters();
+        if (riskMap) updateMapMarkers();
+    }
+}
+
+// ==========================================
+// MY REPORTS CONTROLLER (Citizen side)
+// ==========================================
+function renderMyReports() {
+    if (!currentUser || currentUser.role !== 'Warga') {
+        navigateTo('beranda');
+        return;
+    }
+
+    const myReportsList = document.getElementById('my-reports-list');
+    myReportsList.innerHTML = '';
+
+    // Filter database reports created by logged in user
+    const myIncidents = incidentsDatabase.filter(inc => inc.userEmail === currentUser.email);
+
+    if (myIncidents.length === 0) {
+        myReportsList.innerHTML = `
+            <div class="detail-empty-state" style="border: 1px dashed var(--border-color-subtle); border-radius:16px; padding:60px 24px;">
+                <i data-lucide="folder-open" class="icon-xl"></i>
+                <h4>Belum Ada Laporan</h4>
+                <p>Anda belum pernah mengirimkan laporan keamanan. Semua laporan yang Anda buat akan tercatat di sini.</p>
+                <button class="btn btn-primary mt-sm" onclick="navigateTo('wizard')">Buat Laporan Pertama</button>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    myIncidents.forEach(report => {
+        const card = document.createElement('div');
+        card.className = 'my-report-card';
+
+        // Risk & status badge definitions
+        let riskColor = 'badge-orange';
+        if (report.risk === 'Tinggi') riskColor = 'badge-red';
+        else if (report.risk === 'Rendah') riskColor = 'badge-green';
+
+        let statusClass = 'badge-orange';
+        let statusText = 'Sedang Ditinjau';
+        if (report.status === 'VERIFIKASI') {
+            statusClass = 'badge-green';
+            statusText = 'Terverifikasi';
+        } else if (report.status === 'DITOLAK') {
+            statusClass = 'badge-red';
+            statusText = 'Ditolak';
+        }
+
+        const photoUrl = report.image || 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=200';
+
+        card.innerHTML = `
+            <img src="${photoUrl}" alt="Thumbnail" class="my-report-thumb">
+            <div class="my-report-details">
+                <span class="badge ${riskColor}" style="align-self:flex-start; margin-bottom:4px;">${report.category}</span>
+                <h3>${report.title}</h3>
+                <div class="my-report-meta">
+                    <span>Kec. ${report.kecamatan}</span>
+                    <span>&bull;</span>
+                    <span>${report.time}</span>
+                </div>
+                <p class="my-report-desc">${report.description.substring(0, 160)}${report.description.length > 160 ? '...' : ''}</p>
+            </div>
+            <div class="my-report-status-box">
+                <span class="badge ${statusClass}">${statusText}</span>
+                <span class="text-muted text-xs" style="font-size:0.7rem;">ID: #${report.id}</span>
+            </div>
+        `;
+        myReportsList.appendChild(card);
+    });
+
+    lucide.createIcons();
 }

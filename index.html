@@ -39,17 +39,47 @@
                 <a href="#" id="nav-laporan" class="nav-link" onclick="navigateTo('laporan')">Laporan</a>
                 <a href="#" id="nav-statistik" class="nav-link" onclick="navigateTo('statistik')">Statistik</a>
                 <a href="#" id="nav-tentang" class="nav-link" onclick="navigateTo('tentang')">Tentang</a>
+                <a href="#" id="nav-admin-dashboard" class="nav-link" onclick="navigateTo('admin-dashboard')" style="display: none;">Moderasi Laporan</a>
             </nav>
 
             <div class="header-actions">
-                <button class="btn btn-primary btn-report" onclick="navigateTo('wizard')">
+                <button class="btn btn-primary btn-report" onclick="triggerCreateReport()">
                     <i data-lucide="plus-circle" class="icon-sm"></i>
                     <span>Buat Laporan</span>
                 </button>
-                <div class="user-profile" onclick="toggleProfileDropdown()">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100"
+                
+                <!-- Logged Out State -->
+                <div id="header-auth-buttons" class="header-auth-buttons">
+                    <button class="btn btn-secondary btn-sm" onclick="navigateTo('login')">Masuk</button>
+                </div>
+                
+                <!-- Logged In State -->
+                <div id="header-user-profile" class="user-profile" style="display: none;" onclick="toggleProfileDropdown(event)">
+                    <img id="header-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100"
                         alt="User Profile" class="profile-img">
                     <span class="status-indicator online"></span>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="profile-dropdown" class="profile-dropdown-menu">
+                        <div class="dropdown-user-info">
+                            <h4 id="dropdown-user-name">Dian Pratama</h4>
+                            <span id="dropdown-user-role" class="user-role-badge">Warga</span>
+                        </div>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item" id="menu-my-reports" onclick="navigateTo('my-reports')">
+                            <i data-lucide="folder-heart" class="icon-xs"></i>
+                            <span>Laporan Saya</span>
+                        </a>
+                        <a href="#" class="dropdown-item" id="menu-admin-dashboard-dropdown" onclick="navigateTo('admin-dashboard')" style="display: none;">
+                            <i data-lucide="layout-dashboard" class="icon-xs"></i>
+                            <span>Dashboard Admin</span>
+                        </a>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item text-red" onclick="handleLogout(event)">
+                            <i data-lucide="log-out" class="icon-xs"></i>
+                            <span>Keluar</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -719,6 +749,271 @@
                 </div>
             </div>
         </section>
+
+        <!-- 7. LOGIN VIEW -->
+        <section id="view-login" class="view-section">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-banner">
+                        <div class="auth-banner-content">
+                            <div class="brand-logo-white">
+                                <i data-lucide="shield-check" class="icon-lg"></i>
+                                <span>AMANIN</span>
+                            </div>
+                            <h2>Lapor. Pahami. Waspada.</h2>
+                            <p>Bersama mewujudkan Kota Bandung yang lebih aman melalui partisipasi aktif warga.</p>
+                        </div>
+                        <div class="auth-banner-overlay"></div>
+                    </div>
+                    
+                    <div class="auth-form-side">
+                        <div class="auth-form-header">
+                            <h3>Selamat Datang Kembali</h3>
+                            <p>Masuk untuk mengelola laporan dan pantau keamanan sekitar Anda.</p>
+                        </div>
+                        
+                        <form id="login-form" onsubmit="handleMockLogin(event)">
+                            <!-- Role Switcher Segmented -->
+                            <div class="form-group">
+                                <label>Masuk Sebagai</label>
+                                <div class="role-selector-segmented">
+                                    <input type="radio" name="login-role" id="role-warga" value="Warga" checked>
+                                    <label for="role-warga" class="role-option">
+                                        <i data-lucide="users" class="icon-xs"></i>
+                                        <span>Warga</span>
+                                    </label>
+
+                                    <input type="radio" name="login-role" id="role-admin" value="Admin">
+                                    <label for="role-admin" class="role-option">
+                                        <i data-lucide="shield-alert" class="icon-xs"></i>
+                                        <span>Admin / Moderator</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="login-email">Alamat Email <span class="required">*</span></label>
+                                <div class="input-with-icon">
+                                    <i data-lucide="mail" class="input-icon"></i>
+                                    <input type="email" id="login-email" placeholder="contoh: warga@amanin.id" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="login-password">Kata Sandi <span class="required">*</span></label>
+                                    <a href="#" class="auth-helper-link" onclick="alert('Simulasi reset password: Email instruksi pemulihan telah dikirim ke email Anda.')">Lupa Kata Sandi?</a>
+                                </div>
+                                <div class="input-with-icon">
+                                    <i data-lucide="lock" class="input-icon"></i>
+                                    <input type="password" id="login-password" placeholder="Masukkan kata sandi Anda" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row align-center justify-between mt-xs mb-sm">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="login-remember">
+                                    <span class="custom-chk"></span>
+                                    <span class="chk-label text-sm">Ingat Saya</span>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block btn-auth-submit" id="btn-login-submit">
+                                <i data-lucide="log-in" class="icon-sm"></i>
+                                <span>Masuk</span>
+                            </button>
+                            
+                            <div class="auth-footer mt-md text-center">
+                                <p>Belum memiliki akun? <a href="#" class="auth-toggle-link" onclick="navigateTo('register')">Daftar Sekarang</a></p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. REGISTER VIEW -->
+        <section id="view-register" class="view-section">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-banner">
+                        <div class="auth-banner-content">
+                            <div class="brand-logo-white">
+                                <i data-lucide="shield-check" class="icon-lg"></i>
+                                <span>AMANIN</span>
+                            </div>
+                            <h2>Gabung Komunitas AMANIN</h2>
+                            <p>Lindungi diri Anda dan sesama warga dengan membagikan informasi keamanan secara anonim dan terverifikasi.</p>
+                        </div>
+                        <div class="auth-banner-overlay"></div>
+                    </div>
+                    
+                    <div class="auth-form-side">
+                        <div class="auth-form-header">
+                            <h3>Buat Akun Warga</h3>
+                            <p>Pendaftaran memerlukan NIK valid untuk memverifikasi domisili warga Kota Bandung.</p>
+                        </div>
+                        
+                        <form id="register-form" onsubmit="handleMockRegister(event)">
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label for="reg-name">Nama Lengkap <span class="required">*</span></label>
+                                    <div class="input-with-icon">
+                                        <i data-lucide="user" class="input-icon"></i>
+                                        <input type="text" id="reg-name" placeholder="Nama sesuai KTP" required>
+                                    </div>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label for="reg-nik">NIK KTP (16 Digit) <span class="required">*</span></label>
+                                    <div class="input-with-icon">
+                                        <i data-lucide="credit-card" class="input-icon"></i>
+                                        <input type="text" id="reg-nik" placeholder="3273xxxxxxxxxxxx" maxlength="16" pattern="\d{16}" title="NIK harus berupa 16 digit angka" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label for="reg-email">Alamat Email <span class="required">*</span></label>
+                                    <div class="input-with-icon">
+                                        <i data-lucide="mail" class="input-icon"></i>
+                                        <input type="email" id="reg-email" placeholder="warga@domain.com" required>
+                                    </div>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label for="reg-kecamatan">Kecamatan Domisili <span class="required">*</span></label>
+                                    <div class="custom-select-wrapper">
+                                        <select id="reg-kecamatan" class="custom-select" required>
+                                            <option value="" disabled selected>Pilih Kecamatan</option>
+                                            <option value="Coblong">Coblong</option>
+                                            <option value="Cibiru">Cibiru</option>
+                                            <option value="Sumur Bandung">Sumur Bandung</option>
+                                            <option value="Buahbatu">Buahbatu</option>
+                                            <option value="Lengkong">Lengkong</option>
+                                            <option value="Cicendo">Cicendo</option>
+                                            <option value="Cidadap">Cidadap</option>
+                                        </select>
+                                        <i data-lucide="chevron-down" class="select-chevron"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label for="reg-password">Kata Sandi <span class="required">*</span></label>
+                                    <div class="input-with-icon">
+                                        <i data-lucide="lock" class="input-icon"></i>
+                                        <input type="password" id="reg-password" placeholder="Minimal 6 karakter" minlength="6" required>
+                                    </div>
+                                </div>
+                                <div class="form-group col-6">
+                                    <label for="reg-confirm">Konfirmasi Sandi <span class="required">*</span></label>
+                                    <div class="input-with-icon">
+                                        <i data-lucide="lock" class="input-icon"></i>
+                                        <input type="password" id="reg-confirm" placeholder="Ketik ulang sandi" minlength="6" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group mt-xs">
+                                <label class="checkbox-item align-start">
+                                    <input type="checkbox" id="reg-agree" required>
+                                    <span class="custom-chk mt-2"></span>
+                                    <span class="chk-label text-xs">Saya setuju dengan Syarat & Ketentuan serta Kebijakan Privasi platform AMANIN Kota Bandung dalam memproses data saya secara terenkripsi.</span>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block btn-auth-submit mt-xs" id="btn-register-submit">
+                                <i data-lucide="user-plus" class="icon-sm"></i>
+                                <span>Daftar Akun</span>
+                            </button>
+                            
+                            <div class="auth-footer mt-md text-center">
+                                <p>Sudah memiliki akun? <a href="#" class="auth-toggle-link" onclick="navigateTo('login')">Masuk di Sini</a></p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. ADMIN DASHBOARD VIEW -->
+        <section id="view-admin-dashboard" class="view-section">
+            <div class="section-container page-padding">
+                <div class="reports-header-row mb-md">
+                    <div>
+                        <h1 class="page-title">Moderasi Laporan Keamanan</h1>
+                        <p class="page-subtitle">Sebagai Admin, Anda dapat memverifikasi laporan baru dari warga Bandung atau menolaknya jika terbukti palsu/spam.</p>
+                    </div>
+                    <div class="admin-badge-indicator">
+                        <i data-lucide="shield-check" class="text-blue-primary"></i>
+                        <strong>Panel Admin</strong>
+                    </div>
+                </div>
+
+                <!-- Admin Metrics Row -->
+                <div class="admin-metrics-grid mb-md">
+                    <div class="metric-card bg-blue-subtle">
+                        <span class="metric-label">TOTAL LAPORAN MASUK</span>
+                        <h2 class="metric-value" id="admin-total-reports">0</h2>
+                        <i data-lucide="inbox" class="metric-bg-icon text-blue"></i>
+                    </div>
+                    <div class="metric-card bg-orange-subtle">
+                        <span class="metric-label">MENUNGGU TINJAUAN</span>
+                        <h2 class="metric-value" id="admin-pending-reports">0</h2>
+                        <i data-lucide="clock" class="metric-bg-icon text-orange"></i>
+                    </div>
+                    <div class="metric-card bg-green-subtle">
+                        <span class="metric-label">TERVERIFIKASI</span>
+                        <h2 class="metric-value text-green" id="admin-verified-reports">0</h2>
+                        <i data-lucide="check-circle" class="metric-bg-icon text-green"></i>
+                    </div>
+                    <div class="metric-card bg-red-subtle">
+                        <span class="metric-label">LAPORAN DITOLAK</span>
+                        <h2 class="metric-value text-red" id="admin-rejected-reports">0</h2>
+                        <i data-lucide="x-circle" class="metric-bg-icon text-red"></i>
+                    </div>
+                </div>
+
+                <!-- Main Content Row -->
+                <div class="admin-layout-container">
+                    <div class="admin-list-panel">
+                        <div class="panel-header-row">
+                            <h3>Antrean Moderasi Laporan</h3>
+                            <span class="badge badge-gray" id="admin-queue-count">0 Laporan</span>
+                        </div>
+                        
+                        <div class="admin-queue-list" id="admin-queue-list">
+                            <!-- Injected dynamically via app.js -->
+                        </div>
+                    </div>
+                    
+                    <div class="admin-detail-panel" id="admin-detail-panel">
+                        <div class="detail-empty-state">
+                            <i data-lucide="file-text" class="icon-xl"></i>
+                            <h4>Pilih Laporan</h4>
+                            <p>Klik salah satu laporan di daftar sebelah kiri untuk melihat detail bukti dan melakukan tindakan verifikasi.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. MY REPORTS VIEW -->
+        <section id="view-my-reports" class="view-section">
+            <div class="section-container page-padding">
+                <div class="reports-header-row mb-md">
+                    <div>
+                        <h1 class="page-title">Riwayat Laporan Saya</h1>
+                        <p class="page-subtitle">Daftar laporan keamanan yang Anda kontribusikan untuk Kota Bandung. Demi keamanan, data diri Anda tetap disembunyikan dari publik.</p>
+                    </div>
+                </div>
+
+                <div class="my-reports-list" id="my-reports-list">
+                    <!-- Injected dynamically via app.js -->
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- SUCCESS SUBMISSION MODAL -->
@@ -771,6 +1066,8 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Custom Application Javascript -->
     <script src="app.js"></script>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
 </body>
 
 </html>
